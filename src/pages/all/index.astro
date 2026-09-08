@@ -1,0 +1,16 @@
+---
+import Base from "../../layouts/Base.astro";
+import ArtworkGrid from "../../components/ArtworkGrid.astro";
+import ViewSwitch from "../../components/ViewSwitch.astro";
+import { artworks } from "../../data/gallery";
+---
+<Base title="All Works — Open Collection Archive">
+  <h1>All Works</h1>
+  <p class="count">{artworks.length.toLocaleString()} open-access works</p>
+  <ViewSwitch base="/all" active="catalog" />
+  <ArtworkGrid artworks={artworks} />
+</Base>
+
+<style>
+  .count { color: var(--muted); font-size: 0.9rem; margin-top: -4px; }
+</style>

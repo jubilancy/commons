@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+import ArtworkGrid from "../components/ArtworkGrid.astro";
+import { artworks } from "../data/gallery";
+
+const featured = [...artworks].sort(() => Math.random() - 0.5).slice(0, 15);
+---
+<Base title="Open Collection Archive">
+  <section class="intro">
+    <h1>Open Collection Archive</h1>
+    <p>
+      A hand-built browsing layer over the National Gallery of Art's open dataset —
+      {artworks.length.toLocaleString()} open-access works, free to browse and reuse.
+    </p>
+    <p class="links">
+      <a href="/all/">Browse all works</a> · <a href="/all/infinite/">Infinite view</a> · <a href="/all/shuffle/">Shuffle view</a>
+    </p>
+  </section>
+  <ArtworkGrid artworks={featured} />
+</Base>
+
+<style>
+  .intro {
+    max-width: 640px;
+    margin-bottom: 32px;
+  }
+  .intro h1 { margin-bottom: 8px; }
+  .intro p { color: var(--muted); line-height: 1.5; }
+  .intro .links { font-size: 0.9rem; }
+  .intro .links a { color: var(--accent); text-decoration: none; }
+  .intro .links a:hover { text-decoration: underline; }
+</style>

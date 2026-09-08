@@ -1,0 +1,16 @@
+---
+import Base from "../../../layouts/Base.astro";
+import ViewSwitch from "../../../components/ViewSwitch.astro";
+import ShuffleView from "../../../components/ShuffleView.astro";
+import { artworks } from "../../../data/gallery";
+---
+<Base title="All Works — Shuffle View">
+  <h1>All Works</h1>
+  <p class="count">{artworks.length.toLocaleString()} open-access works, shown 60 at a time</p>
+  <ViewSwitch base="/all" active="shuffle" />
+  <ShuffleView artworks={artworks} />
+</Base>
+
+<style>
+  .count { color: var(--muted); font-size: 0.9rem; margin-top: -4px; }
+</style>

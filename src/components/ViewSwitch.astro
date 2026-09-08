@@ -1,0 +1,13 @@
+---
+interface Props {
+  base: string; // e.g. "/all" or "/artists/rembrandt-van-rijn"
+  active: "catalog" | "infinite" | "shuffle";
+}
+const { base, active } = Astro.props as Props;
+const trimmed = base.replace(/\/$/, "");
+---
+<nav class="view-switch">
+  <a href={`${trimmed}/`} class={active === "catalog" ? "active" : ""}>Catalog View</a>
+  <a href={`${trimmed}/infinite/`} class={active === "infinite" ? "active" : ""}>Infinite View</a>
+  <a href={`${trimmed}/shuffle/`} class={active === "shuffle" ? "active" : ""}>Shuffle View</a>
+</nav>

@@ -1,0 +1,56 @@
+---
+import { iiifSized, type Artwork } from "../data/gallery";
+interface Props {
+  artwork: Artwork;
+}
+const { artwork } = Astro.props as Props;
+---
+<a class="card" href={`/artwork/${artwork.id}/`}>
+  <div class="thumb-wrap">
+    <img
+      src={iiifSized(artwork.iiif_url, 400)}
+      alt={artwork.alt_text || artwork.title}
+      loading="lazy"
+    />
+  </div>
+  <div class="meta">
+    <p class="title">{artwork.title}</p>
+    <p class="artist">{artwork.artist}</p>
+  </div>
+</a>
+
+<style>
+  .card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    break-inside: avoid;
+    margin-bottom: 18px;
+  }
+  .thumb-wrap {
+    background: #eae6db;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .thumb-wrap img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+  }
+  .card:hover .thumb-wrap img {
+    transform: scale(1.03);
+  }
+  .meta { padding: 8px 2px 0; }
+  .title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  .artist {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+</style>

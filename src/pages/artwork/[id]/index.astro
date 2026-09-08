@@ -1,0 +1,113 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { artworks } from "../../../data/gallery";
+
+export function getStaticPaths() {
+  return artworks.map((a) => ({ params: { id: a.id }, props: { artwork: a } }));
+}
+
+const { artwork } = Astro.props as { artwork: (typeof artworks)[number] };
+const fullImg = `${artwork.iiif_url}/full/!1200,1200/0/default.jpg`;
+---
+<Base title={`${artwork.title} — ${artwork.artist}`} description={artwork.alt_text || artwork.title}>
+  <p class="crumb"><a href={`/artists/${artwork.artist_slug}/`}>← {artwork.artist}</a></p>
+  <div class="detail">
+    <div class="image-col">
+      <img src={fullImg} alt={artwork.alt_text || artwork.title} />
+    </div>
+    <div class="info-col">
+      <h1>{artwork.title}</h1>
+      <p class="artist-line">
+        <a href={`/artists/${artwork.artist_slug}/`}>{artwork.artist}</a>
+        {artwork.nationality !== "Unknown" && <span class="nat"> · {artwork.nationality}</span>}
+      </p>
+      {artwork.date && <p class="date">{artwork.date}</p>}
+
+      <dl>
+        {artwork.medium && (<><dt>Medium</dt><dd>{artwork.medium}</dd></>)}
+        <dt>Classification</dt>
+        <dd><a href={`/styles/${artwork.classification_slug}/`}>{artwork.classification}</a></dd>
+        <dt>Period</dt>
+        <dd><a href={`/centuries/${artwork.century_slug}/`}>{artwork.century}</a></dd>
+        {artwork.width && artwork.height && (<><dt>Image size</dt><dd>{artwork.width} × {artwork.height}px</dd></>)}
+      </dl>
+
+      {artwork.alt_text && (
+        <div class="alt-text">
+          <h2>Description</h2>
+          <p>{artwork.alt_text}</p>
+        </div>
+      )}
+
+      <div class="rights">
+        <h2>Rights &amp; Source</h2>
+        <p>
+          Open access image from the <a href="https://www.nga.gov" target="_blank" rel="noopener">National Gallery of Art</a>,
+          released under its open access program. Metadata via the
+          {" "}<a href="https://github.com/NationalGalleryOfArt/opendata" target="_blank" rel="noopener">NGA Open Data Program</a> (CC0).
+        </p>
+        <p>
+          <a href={artwork.source_url} target="_blank" rel="noopener">View on nga.gov →</a>
+        </p>
+        {artwork.wikidata && (
+          <p><a href={`https://www.wikidata.org/wiki/${artwork.wikidata}`} target="_blank" rel="noopener">Wikidata record →</a></p>
+        )}
+        <p><a href={fullImg} target="_blank" rel="noopener">Download full-size image →</a></p>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .crumb { font-size: 0.85rem; margin-bottom: 16px; }
+  .crumb a { color: var(--muted); text-decoration: none; }
+  .crumb a:hover { color: var(--accent); }
+  .detail {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 40px;
+  }
+  @media (max-width: 800px) {
+    .detail { grid-template-columns: 1fr; }
+  }
+  .image-col img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border);
+    background: #eae6db;
+  }
+  .info-col h1 {
+    margin: 0 0 6px;
+    font-size: 1.6rem;
+  }
+  .artist-line { margin: 0; font-size: 1rem; }
+  .artist-line a { color: var(--accent); text-decoration: none; }
+  .artist-line a:hover { text-decoration: underline; }
+  .nat { color: var(--muted); }
+  .date { color: var(--muted); margin: 2px 0 18px; }
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    font-size: 0.88rem;
+    margin: 0 0 24px;
+  }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  dd a { color: inherit; text-decoration: underline; text-decoration-color: var(--border); }
+  .alt-text, .rights {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+  .alt-text h2, .rights h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .alt-text p, .rights p { font-size: 0.9rem; line-height: 1.5; margin: 0 0 8px; }
+  .rights a { color: var(--accent); }
+</style>

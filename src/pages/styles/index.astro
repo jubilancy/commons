@@ -1,0 +1,46 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getClassificationFacets } from "../../data/gallery";
+
+const facets = getClassificationFacets();
+---
+<Base title="Browse by Style — Open Collection Archive">
+  <h1>Browse by Style</h1>
+  <p class="count">{facets.length.toLocaleString()} classifications</p>
+  <ul class="facet-list">
+    {facets.map((f) => (
+      <li>
+        <a href={`/styles/${f.slug}/`}>{f.label}</a>
+        <span class="tally">{f.count}</span>
+      </li>
+    ))}
+  </ul>
+</Base>
+
+<style>
+  .count { color: var(--muted); font-size: 0.9rem; margin-top: -4px; }
+  .facet-list {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0 0;
+    columns: 3 240px;
+    column-gap: 24px;
+  }
+  .facet-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    break-inside: avoid;
+  }
+  .facet-list a {
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  .facet-list a:hover { color: var(--accent); }
+  .tally {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+</style>

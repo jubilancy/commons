@@ -1,0 +1,28 @@
+---
+import Base from "../../../layouts/Base.astro";
+import ArtworkGrid from "../../../components/ArtworkGrid.astro";
+import ViewSwitch from "../../../components/ViewSwitch.astro";
+import { getArtistFacets, getByArtistSlug } from "../../../data/gallery";
+
+export function getStaticPaths() {
+  return getArtistFacets().map((f) => ({ params: { slug: f.slug } }));
+}
+
+const { slug } = Astro.params;
+const works = getByArtistSlug(slug as string);
+const label = works[0]?.artist ?? slug;
+---
+<Base title={`${label} — Open Collection Archive`}>
+  <p class="crumb"><a href="/artists/">← All artists</a></p>
+  <h1>{label}</h1>
+  <p class="count">{works.length.toLocaleString()} work{works.length === 1 ? "" : "s"}</p>
+  <ViewSwitch base={`/artists/${slug}`} active="catalog" />
+  <ArtworkGrid artworks={works} />
+</Base>
+
+<style>
+  .crumb { font-size: 0.85rem; margin-bottom: 8px; }
+  .crumb a { color: var(--muted); text-decoration: none; }
+  .crumb a:hover { color: var(--accent); }
+  .count { color: var(--muted); font-size: 0.9rem; margin-top: -4px; }
+</style>

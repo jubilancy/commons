@@ -1,0 +1,125 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "A public domain image archive built from the National Gallery of Art's open dataset." } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <style is:global>
+      :root {
+        --bg: #f5f3ee;
+        --fg: #1a1a1a;
+        --muted: #6b6b6b;
+        --accent: #a8330f;
+        --border: #ddd8cc;
+        --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--sans);
+      }
+      a { color: inherit; }
+      h1, h2, h3 { font-family: var(--serif); font-weight: 500; }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      header.site-header {
+        border-bottom: 1px solid var(--border);
+        padding: 20px 0;
+      }
+      header.site-header .container {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .site-title {
+        font-family: var(--serif);
+        font-size: 1.4rem;
+        text-decoration: none;
+        letter-spacing: 0.01em;
+      }
+      nav.browse-nav {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      nav.browse-nav a {
+        text-decoration: none;
+        color: var(--muted);
+        border-bottom: 1px solid transparent;
+        padding-bottom: 2px;
+      }
+      nav.browse-nav a:hover {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+      nav.view-switch {
+        display: flex;
+        gap: 12px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 18px 0 8px;
+      }
+      nav.view-switch a {
+        text-decoration: none;
+        color: var(--muted);
+        padding: 4px 10px;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+      }
+      nav.view-switch a.active {
+        color: var(--bg);
+        background: var(--fg);
+        border-color: var(--fg);
+      }
+      main { padding: 28px 0 60px; }
+      footer.site-footer {
+        border-top: 1px solid var(--border);
+        padding: 24px 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="site-title" href="/">Open Collection Archive</a>
+        <nav class="browse-nav">
+          <a href="/artists/">Artist</a>
+          <a href="/centuries/">Century</a>
+          <a href="/styles/">Style</a>
+          <a href="/all/">All</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>Metadata and images sourced from the <a href="https://github.com/NationalGalleryOfArt/opendata" target="_blank" rel="noopener">National Gallery of Art Open Data Program</a>, released under CC0. Images shown are flagged open-access in the NGA dataset. This is a prototype fan project, not affiliated with the National Gallery of Art.</p>
+      </div>
+    </footer>
+  </body>
+</html>

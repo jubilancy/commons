@@ -1,0 +1,26 @@
+---
+import ArtworkCard from "./ArtworkCard.astro";
+import type { Artwork } from "../data/gallery";
+interface Props {
+  artworks: Artwork[];
+}
+const { artworks } = Astro.props as Props;
+---
+<div class="grid">
+  {artworks.map((a) => <ArtworkCard artwork={a} />)}
+</div>
+{artworks.length === 0 && <p class="empty">No works found.</p>}
+
+<style>
+  .grid {
+    columns: 5 220px;
+    column-gap: 18px;
+  }
+  @media (max-width: 640px) {
+    .grid { columns: 2 160px; }
+  }
+  .empty {
+    color: var(--muted);
+    font-style: italic;
+  }
+</style>
