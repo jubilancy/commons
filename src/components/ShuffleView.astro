@@ -1,18 +1,12 @@
 ---
-import { thumbUrl, type Artwork } from "../data/gallery";
+import { shardCount } from "../data/gallery";
 interface Props {
-  artworks: Artwork[];
+  scope: string;
+  total: number;
 }
-const { artworks } = Astro.props as Props;
-const payload = artworks.map((a) => ({
-  id: a.id,
-  title: a.title,
-  artist: a.artist,
-  thumb: thumbUrl(a),
-  alt: a.alt_text || a.title,
-}));
+const { scope, total } = Astro.props as Props;
 ---
-<div id="shuffle-root" data-artworks={JSON.stringify(payload)}>
+<div id="shuffle-root" data-scope={scope} data-pages={shardCount(total)}>
   <button id="shuffle-btn" type="button">Shuffle again</button>
   <div id="shuffle-grid" class="grid"></div>
 </div>
@@ -71,20 +65,18 @@ const payload = artworks.map((a) => ({
 </style>
 
 <script>
-  interface ArtworkPayload {
-    id: string;
-    title: string;
-    artist: string;
-    thumb: string;
-    alt: string;
-  }
+  import { fetchShard, renderCard, type CardPayload } from "../scripts/cards";
 
   const root = document.getElementById("shuffle-root")!;
   const grid = document.getElementById("shuffle-grid")!;
   const btn = document.getElementById("shuffle-btn")!;
-  const all: ArtworkPayload[] = JSON.parse(root.dataset.artworks || "[]");
+  const scope = root.dataset.scope!;
+  const pages = Number(root.dataset.pages);
 
-  function shuffledCopy<T>(arr: T[]): T[] {
+  const SHOW = 60;
+  const SHARDS_PER_SHUFFLE = 3; // sample a few random shards rather than loading the whole scope
+
+  function shuffled<T>(arr: T[]): T[] {
     const copy = [...arr];
     for (let i = copy.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -93,25 +85,19 @@ const payload = artworks.map((a) => ({
     return copy;
   }
 
-  function render(items: ArtworkPayload[]) {
-    grid.innerHTML = "";
-    const frag = document.createDocumentFragment();
-    for (const a of items.slice(0, 60)) {
-      const card = document.createElement("a");
-      card.className = "card";
-      card.href = `/artwork/${a.id}/`;
-      card.innerHTML = `
-        <div class="thumb-wrap"><img src="${a.thumb}" alt="${a.alt.replace(/"/g, "&quot;")}" loading="lazy" /></div>
-        <div class="meta">
-          <p class="title">${a.title}</p>
-          <p class="artist">${a.artist}</p>
-        </div>
-      `;
-      frag.appendChild(card);
+  async function shuffle() {
+    btn.setAttribute("disabled", "");
+    try {
+      const picks = shuffled(Array.from({ length: pages }, (_, i) => i)).slice(0, SHARDS_PER_SHUFFLE);
+      const items: CardPayload[] = (await Promise.all(picks.map((n) => fetchShard(scope, n)))).flat();
+      grid.replaceChildren(...shuffled(items).slice(0, SHOW).map(renderCard));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      btn.removeAttribute("disabled");
     }
-    grid.appendChild(frag);
   }
 
-  btn.addEventListener("click", () => render(shuffledCopy(all)));
-  render(shuffledCopy(all));
+  btn.addEventListener("click", shuffle);
+  shuffle();
 </script>

@@ -1,0 +1,30 @@
+---
+interface Props {
+  page: { currentPage: number; lastPage: number; url: { prev?: string; next?: string } };
+  base: string; // e.g. "/all" or "/artists/foo"
+}
+const { page, base } = Astro.props as Props;
+const root = base.replace(/\/$/, "");
+const href = (n: number) => (n === 1 ? `${root}/` : `${root}/${n}/`);
+---
+{page.lastPage > 1 && (
+  <nav class="pagination" aria-label="Pagination">
+    {page.url.prev ? <a href={page.url.prev} rel="prev">← Prev</a> : <span class="off">← Prev</span>}
+    <span class="pos">Page {page.currentPage} of {page.lastPage}</span>
+    {page.url.next ? <a href={page.url.next} rel="next">Next →</a> : <span class="off">Next →</span>}
+  </nav>
+)}
+
+<style>
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 28px 0;
+    font-size: 0.9rem;
+  }
+  .pagination a { color: var(--accent); text-decoration: none; }
+  .pagination a:hover { text-decoration: underline; }
+  .off { color: var(--muted); opacity: 0.5; }
+  .pos { color: var(--muted); }
+</style>

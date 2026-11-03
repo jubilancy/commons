@@ -8,7 +8,7 @@ import { artworks } from "../../../data/gallery";
   <h1>All Works</h1>
   <p class="count">{artworks.length.toLocaleString()} open-access works</p>
   <ViewSwitch base="/all" active="infinite" />
-  <InfiniteView artworks={artworks} />
+  <InfiniteView scope="all" total={artworks.length} />
 </Base>
 
 <style>

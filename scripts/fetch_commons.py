@@ -5,7 +5,7 @@ src/data/commons.json in the same shape as artworks.json (plus thumb_url/full_ur
 
 Stdlib only:  uv run scripts/fetch_commons.py  (fetches everything; --limit N to cap per category)
 """
-import argparse, html, json, re, sys, time, urllib.error, urllib.parse, urllib.request
+import argparse, hashlib, html, json, re, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 
 API = "https://commons.wikimedia.org/w/api.php"
@@ -13,9 +13,12 @@ UA = "commons-archive-prototype/0.1 (https://github.com/jubilancy/commons)"
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def slugify(s):
+def slugify(s, max_len=80):
     s = re.sub(r"[^\w\s-]", "", (s or "").lower().strip())
-    return re.sub(r"[\s_]+", "-", s).strip("-") or "unknown"
+    s = re.sub(r"[\s_]+", "-", s).strip("-") or "unknown"
+    if len(s) > max_len:  # keep page paths under filesystem name limits; hash avoids collisions
+        s = s[:max_len].rstrip("-") + "-" + hashlib.sha1(s.encode()).hexdigest()[:8]
+    return s
 
 
 def strip_html(s):

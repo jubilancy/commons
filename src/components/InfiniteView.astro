@@ -1,21 +1,14 @@
 ---
-import { thumbUrl, type Artwork } from "../data/gallery";
+import { shardCount } from "../data/gallery";
 interface Props {
-  artworks: Artwork[];
+  scope: string; // "all" | "artists/<slug>" | ...
+  total: number;
 }
-const { artworks } = Astro.props as Props;
-// Embed a lightweight payload (id, title, artist, thumb) for the client script.
-const payload = artworks.map((a) => ({
-  id: a.id,
-  title: a.title,
-  artist: a.artist,
-  thumb: thumbUrl(a),
-  alt: a.alt_text || a.title,
-}));
+const { scope, total } = Astro.props as Props;
 ---
-<div id="infinite-root" data-artworks={JSON.stringify(payload)}>
+<div id="infinite-root" data-scope={scope} data-pages={shardCount(total)}>
   <div id="infinite-grid" class="grid"></div>
-  <p id="infinite-end" class="end-msg" hidden>You've reached the end — {artworks.length} works shown.</p>
+  <p id="infinite-end" class="end-msg" hidden>You've reached the end — {total} works shown.</p>
 </div>
 
 <style>
@@ -64,45 +57,36 @@ const payload = artworks.map((a) => ({
 </style>
 
 <script>
-  interface ArtworkPayload {
-    id: string;
-    title: string;
-    artist: string;
-    thumb: string;
-    alt: string;
-  }
+  import { fetchShard, renderCard } from "../scripts/cards";
 
   const root = document.getElementById("infinite-root")!;
   const grid = document.getElementById("infinite-grid")!;
   const endMsg = document.getElementById("infinite-end")!;
-  const all: ArtworkPayload[] = JSON.parse(root.dataset.artworks || "[]");
+  const scope = root.dataset.scope!;
+  const pages = Number(root.dataset.pages);
 
-  const PAGE_SIZE = 20;
-  let loaded = 0;
+  let next = 0;
+  let loading = false;
 
-  function renderNext() {
-    const next = all.slice(loaded, loaded + PAGE_SIZE);
-    if (next.length === 0) {
+  async function loadNext() {
+    if (loading) return;
+    if (next >= pages) {
       endMsg.hidden = false;
       observer.disconnect();
       return;
     }
-    const frag = document.createDocumentFragment();
-    for (const a of next) {
-      const card = document.createElement("a");
-      card.className = "card";
-      card.href = `/artwork/${a.id}/`;
-      card.innerHTML = `
-        <div class="thumb-wrap"><img src="${a.thumb}" alt="${a.alt.replace(/"/g, "&quot;")}" loading="lazy" /></div>
-        <div class="meta">
-          <p class="title">${a.title}</p>
-          <p class="artist">${a.artist}</p>
-        </div>
-      `;
-      frag.appendChild(card);
+    loading = true;
+    try {
+      const items = await fetchShard(scope, next);
+      const frag = document.createDocumentFragment();
+      for (const a of items) frag.appendChild(renderCard(a));
+      grid.appendChild(frag);
+      next++;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading = false;
     }
-    grid.appendChild(frag);
-    loaded += next.length;
   }
 
   const sentinel = document.createElement("div");
@@ -111,11 +95,11 @@ const payload = artworks.map((a) => ({
 
   const observer = new IntersectionObserver(
     (entries) => {
-      if (entries[0].isIntersecting) renderNext();
+      if (entries[0].isIntersecting) loadNext();
     },
     { rootMargin: "600px" }
   );
   observer.observe(sentinel);
 
-  renderNext(); // first page immediately
+  loadNext(); // first page immediately
 </script>
