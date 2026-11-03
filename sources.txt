@@ -1,3 +1,8 @@
 # Wikimedia Commons categories to include (one per line, "Category:" prefix optional).
 # Fetched by scripts/fetch_commons.py -> src/data/commons.json
 Category:Title_pages
+Category:Flowers_in_graphic_ornaments
+Category:Books_from_the_British_Library
+Category:Images_from_the_British_Library_Mechanical_Curator_collection
+Category:Images_from_the_British_Library
+Category:Books_with_images_from_the_British_Library_Mechanical_Curator_collection
