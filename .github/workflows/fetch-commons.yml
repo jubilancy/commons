@@ -1,0 +1,44 @@
+name: Refresh Commons data
+
+# Re-fetches src/data/commons.json when the source list (or the fetch script) changes,
+# commits it to main, then triggers a deploy. Deploys themselves never call Wikimedia.
+on:
+  push:
+    branches: [main]
+    paths:
+      - sources.txt
+      - scripts/fetch_commons.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fetch-commons
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Wikimedia Commons data
+        run: python3 scripts/fetch_commons.py
+
+      - name: Commit and redeploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- src/data/commons.json; then
+            echo "commons.json unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/commons.json
+          git commit -m "Refresh Commons data"
+          git push
+          # Pushes made with GITHUB_TOKEN don't trigger other workflows, so start the deploy explicitly.
+          gh workflow run deploy.yml --ref main

@@ -2,13 +2,21 @@
 import Base from "../../layouts/Base.astro";
 import ArtworkGrid from "../../components/ArtworkGrid.astro";
 import ViewSwitch from "../../components/ViewSwitch.astro";
+import Pagination from "../../components/Pagination.astro";
 import { artworks } from "../../data/gallery";
+
+export function getStaticPaths({ paginate }: { paginate: any }) {
+  return paginate(artworks, { pageSize: 60 });
+}
+
+const { page } = Astro.props;
 ---
 <Base title="All Works — Open Collection Archive">
   <h1>All Works</h1>
   <p class="count">{artworks.length.toLocaleString()} open-access works</p>
   <ViewSwitch base="/all" active="catalog" />
-  <ArtworkGrid artworks={artworks} />
+  <ArtworkGrid artworks={page.data} />
+  <Pagination page={page} base="/all" />
 </Base>
 
 <style>

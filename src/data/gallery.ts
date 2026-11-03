@@ -29,20 +29,36 @@ export interface Artwork {
 
 export const artworks: Artwork[] = [...(artworksRaw as Artwork[]), ...(commonsRaw as Artwork[])];
 
+function groupBy(field: "artist_slug" | "century_slug" | "classification_slug"): Map<string, Artwork[]> {
+  const map = new Map<string, Artwork[]>();
+  for (const a of artworks) {
+    const list = map.get(a[field]);
+    if (list) list.push(a);
+    else map.set(a[field], [a]);
+  }
+  return map;
+}
+
+// Built once per build, so each page does O(1) lookups instead of scanning every record.
+const byId = new Map(artworks.map((a) => [a.id, a]));
+const byArtist = groupBy("artist_slug");
+const byCentury = groupBy("century_slug");
+const byClassification = groupBy("classification_slug");
+
 export function getArtworkById(id: string): Artwork | undefined {
-  return artworks.find((a) => a.id === id);
+  return byId.get(id);
 }
 
 export function getByArtistSlug(slug: string): Artwork[] {
-  return artworks.filter((a) => a.artist_slug === slug);
+  return byArtist.get(slug) ?? [];
 }
 
 export function getByCenturySlug(slug: string): Artwork[] {
-  return artworks.filter((a) => a.century_slug === slug);
+  return byCentury.get(slug) ?? [];
 }
 
 export function getByClassificationSlug(slug: string): Artwork[] {
-  return artworks.filter((a) => a.classification_slug === slug);
+  return byClassification.get(slug) ?? [];
 }
 
 interface FacetEntry {
@@ -51,29 +67,56 @@ interface FacetEntry {
   label: string;
 }
 
-function buildFacet(field: "artist" | "century" | "classification", slugField: "artist_slug" | "century_slug" | "classification_slug"): FacetEntry[] {
-  const map = new Map<string, FacetEntry>();
-  for (const a of artworks) {
-    const slug = a[slugField];
-    const label = a[field];
-    if (!map.has(slug)) {
-      map.set(slug, { slug, count: 0, label });
-    }
-    map.get(slug)!.count++;
-  }
-  return Array.from(map.values()).sort((a, b) => b.count - a.count);
+function buildFacet(groups: Map<string, Artwork[]>, field: "artist" | "century" | "classification"): FacetEntry[] {
+  return Array.from(groups, ([slug, works]) => ({ slug, count: works.length, label: works[0][field] })).sort(
+    (a, b) => b.count - a.count
+  );
 }
 
+const artistFacets = buildFacet(byArtist, "artist");
+const centuryFacets = buildFacet(byCentury, "century");
+const classificationFacets = buildFacet(byClassification, "classification");
+
 export function getArtistFacets(): FacetEntry[] {
-  return buildFacet("artist", "artist_slug");
+  return artistFacets;
 }
 
 export function getCenturyFacets(): FacetEntry[] {
-  return buildFacet("century", "century_slug");
+  return centuryFacets;
 }
 
 export function getClassificationFacets(): FacetEntry[] {
-  return buildFacet("classification", "classification_slug");
+  return classificationFacets;
+}
+
+// --- Client payload shards -------------------------------------------------
+// The infinite/shuffle views fetch small JSON shards on demand instead of embedding
+// every record in the page HTML. A "scope" is "all", "artists/<slug>", "centuries/<slug>"
+// or "styles/<slug>".
+export const SHARD_SIZE = 60;
+
+export interface CardPayload {
+  id: string;
+  title: string;
+  artist: string;
+  thumb: string;
+  alt: string;
+}
+
+export function toCard(a: Artwork): CardPayload {
+  return { id: a.id, title: a.title, artist: a.artist, thumb: thumbUrl(a), alt: a.alt_text || a.title };
+}
+
+export function getScopes(): Map<string, Artwork[]> {
+  const scopes = new Map<string, Artwork[]>([["all", artworks]]);
+  for (const [slug, works] of byArtist) scopes.set(`artists/${slug}`, works);
+  for (const [slug, works] of byCentury) scopes.set(`centuries/${slug}`, works);
+  for (const [slug, works] of byClassification) scopes.set(`styles/${slug}`, works);
+  return scopes;
+}
+
+export function shardCount(total: number): number {
+  return Math.max(1, Math.ceil(total / SHARD_SIZE));
 }
 
 // IIIF helper: request a specific square/box size instead of the baked-in 200x200 thumb

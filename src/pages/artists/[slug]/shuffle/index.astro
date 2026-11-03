@@ -17,7 +17,7 @@ const label = works[0]?.artist ?? slug;
   <h1>{label}</h1>
   <p class="count">{works.length.toLocaleString()} work{works.length === 1 ? "" : "s"}</p>
   <ViewSwitch base={`/artists/${slug}`} active="shuffle" />
-  <ShuffleView artworks={works} />
+  <ShuffleView scope={`artists/${slug}`} total={works.length} />
 </Base>
 
 <style>

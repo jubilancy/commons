@@ -2,22 +2,27 @@
 import Base from "../../../layouts/Base.astro";
 import ArtworkGrid from "../../../components/ArtworkGrid.astro";
 import ViewSwitch from "../../../components/ViewSwitch.astro";
+import Pagination from "../../../components/Pagination.astro";
 import { getArtistFacets, getByArtistSlug } from "../../../data/gallery";
 
-export function getStaticPaths() {
-  return getArtistFacets().map((f) => ({ params: { slug: f.slug } }));
+export function getStaticPaths({ paginate }: { paginate: any }) {
+  return getArtistFacets().flatMap((f) =>
+    paginate(getByArtistSlug(f.slug), { params: { slug: f.slug }, pageSize: 60 })
+  );
 }
 
 const { slug } = Astro.params;
-const works = getByArtistSlug(slug as string);
-const label = works[0]?.artist ?? slug;
+const { page } = Astro.props;
+const total = page.total;
+const label = page.data[0]?.artist ?? slug;
 ---
 <Base title={`${label} — Open Collection Archive`}>
   <p class="crumb"><a href="/artists/">← All artists</a></p>
   <h1>{label}</h1>
-  <p class="count">{works.length.toLocaleString()} work{works.length === 1 ? "" : "s"}</p>
+  <p class="count">{total.toLocaleString()} work{total === 1 ? "" : "s"}</p>
   <ViewSwitch base={`/artists/${slug}`} active="catalog" />
-  <ArtworkGrid artworks={works} />
+  <ArtworkGrid artworks={page.data} />
+  <Pagination page={page} base={`/artists/${slug}`} />
 </Base>
 
 <style>

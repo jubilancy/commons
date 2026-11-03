@@ -8,7 +8,7 @@ import { artworks } from "../../../data/gallery";
   <h1>All Works</h1>
   <p class="count">{artworks.length.toLocaleString()} open-access works, shown 60 at a time</p>
   <ViewSwitch base="/all" active="shuffle" />
-  <ShuffleView artworks={artworks} />
+  <ShuffleView scope="all" total={artworks.length} />
 </Base>
 
 <style>
