@@ -1,13 +1,14 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { artworks } from "../../../data/gallery";
+import { artworks, fullUrl } from "../../../data/gallery";
 
 export function getStaticPaths() {
   return artworks.map((a) => ({ params: { id: a.id }, props: { artwork: a } }));
 }
 
 const { artwork } = Astro.props as { artwork: (typeof artworks)[number] };
-const fullImg = `${artwork.iiif_url}/full/!1200,1200/0/default.jpg`;
+const fullImg = fullUrl(artwork);
+const isCommons = artwork.source === "commons";
 ---
 <Base title={`${artwork.title} — ${artwork.artist}`} description={artwork.alt_text || artwork.title}>
   <p class="crumb"><a href={`/artists/${artwork.artist_slug}/`}>← {artwork.artist}</a></p>
@@ -41,14 +42,26 @@ const fullImg = `${artwork.iiif_url}/full/!1200,1200/0/default.jpg`;
 
       <div class="rights">
         <h2>Rights &amp; Source</h2>
-        <p>
-          Open access image from the <a href="https://www.nga.gov" target="_blank" rel="noopener">National Gallery of Art</a>,
-          released under its open access program. Metadata via the
-          {" "}<a href="https://github.com/NationalGalleryOfArt/opendata" target="_blank" rel="noopener">NGA Open Data Program</a> (CC0).
-        </p>
-        <p>
-          <a href={artwork.source_url} target="_blank" rel="noopener">View on nga.gov →</a>
-        </p>
+        {isCommons ? (
+          <>
+            <p>
+              Image from <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>
+              {artwork.license && <> — {artwork.license}</>}. Check the file page for attribution and license details.
+            </p>
+            <p><a href={artwork.source_url} target="_blank" rel="noopener">View on Wikimedia Commons →</a></p>
+          </>
+        ) : (
+          <>
+            <p>
+              Open access image from the <a href="https://www.nga.gov" target="_blank" rel="noopener">National Gallery of Art</a>,
+              released under its open access program. Metadata via the
+              {" "}<a href="https://github.com/NationalGalleryOfArt/opendata" target="_blank" rel="noopener">NGA Open Data Program</a> (CC0).
+            </p>
+            <p>
+              <a href={artwork.source_url} target="_blank" rel="noopener">View on nga.gov →</a>
+            </p>
+          </>
+        )}
         {artwork.wikidata && (
           <p><a href={`https://www.wikidata.org/wiki/${artwork.wikidata}`} target="_blank" rel="noopener">Wikidata record →</a></p>
         )}

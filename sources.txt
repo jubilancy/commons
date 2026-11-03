@@ -1,0 +1,3 @@
+# Wikimedia Commons categories to include (one per line, "Category:" prefix optional).
+# Fetched by scripts/fetch_commons.py -> src/data/commons.json
+Category:Title_pages

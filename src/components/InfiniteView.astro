@@ -1,5 +1,5 @@
 ---
-import type { Artwork } from "../data/gallery";
+import { thumbUrl, type Artwork } from "../data/gallery";
 interface Props {
   artworks: Artwork[];
 }
@@ -9,7 +9,7 @@ const payload = artworks.map((a) => ({
   id: a.id,
   title: a.title,
   artist: a.artist,
-  thumb: `${a.iiif_url}/full/!400,400/0/default.jpg`,
+  thumb: thumbUrl(a),
   alt: a.alt_text || a.title,
 }));
 ---
