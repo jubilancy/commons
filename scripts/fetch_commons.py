@@ -3,9 +3,9 @@
 Fetch files from the Wikimedia Commons categories listed in sources.txt and write
 src/data/commons.json in the same shape as artworks.json (plus thumb_url/full_url/source).
 
-Stdlib only:  uv run scripts/fetch_commons.py [--limit 500]
+Stdlib only:  uv run scripts/fetch_commons.py  (fetches everything; --limit N to cap per category)
 """
-import argparse, html, json, re, sys, time, urllib.parse, urllib.request
+import argparse, html, json, re, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 
 API = "https://commons.wikimedia.org/w/api.php"
@@ -24,15 +24,19 @@ def strip_html(s):
 
 def api_get(params):
     url = f"{API}?{urllib.parse.urlencode(params)}"
-    for attempt in range(5):
+    for attempt in range(10):
+        wait = min(2 ** attempt * 2, 120)
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=60) as r:
                 return json.load(r)
-        except Exception as e:  # 429 etc: back off and retry
-            wait = 2 ** attempt * 2
+        except urllib.error.HTTPError as e:
+            if e.headers.get("Retry-After", "").isdigit():
+                wait = max(wait, int(e.headers["Retry-After"]))
             print(f"  request failed ({e}); retrying in {wait}s", file=sys.stderr)
-            time.sleep(wait)
+        except Exception as e:
+            print(f"  request failed ({e}); retrying in {wait}s", file=sys.stderr)
+        time.sleep(wait)
     raise SystemExit("Wikimedia API kept failing")
 
 
@@ -104,7 +108,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sources", default=ROOT / "sources.txt")
     ap.add_argument("--out", default=ROOT / "src/data/commons.json")
-    ap.add_argument("--limit", type=int, default=500, help="max files per category (0 = all)")
+    ap.add_argument("--limit", type=int, default=0, help="max files per category (0 = all)")
     args = ap.parse_args()
 
     records, seen = [], set()
