@@ -1,8 +1,10 @@
-# Wikimedia Commons categories to include (one per line, "Category:" prefix optional).
+# Wikimedia Commons categories to include, one per line.
+# Format: Category:Name [| cap]   ("Category:" prefix optional; cap = max files, or "all")
+# Lines without a cap are limited to 5000 files (see --limit in scripts/fetch_commons.py).
 # Fetched by scripts/fetch_commons.py -> src/data/commons.json
-Category:Title_pages
+Category:Title_pages | all
 Category:Flowers_in_graphic_ornaments
 Category:Books_from_the_British_Library
-Category:Images_from_the_British_Library_Mechanical_Curator_collection
-Category:Images_from_the_British_Library
+Category:Images_from_the_British_Library_Mechanical_Curator_collection | 2000
+Category:Images_from_the_British_Library | 2000
 Category:Books_with_images_from_the_British_Library_Mechanical_Curator_collection

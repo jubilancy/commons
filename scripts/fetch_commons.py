@@ -3,7 +3,8 @@
 Fetch files from the Wikimedia Commons categories listed in sources.txt and write
 src/data/commons.json in the same shape as artworks.json (plus thumb_url/full_url/source).
 
-Stdlib only:  uv run scripts/fetch_commons.py  (fetches everything; --limit N to cap per category)
+Stdlib only:  uv run scripts/fetch_commons.py
+sources.txt lines: Category:Name [| N | all]. Categories without a cap use --limit (default 5000).
 """
 import argparse, hashlib, html, json, re, sys, time, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
@@ -43,13 +44,22 @@ def api_get(params):
     raise SystemExit("Wikimedia API kept failing")
 
 
-def read_sources(path):
-    cats = []
+def read_sources(path, default_limit):
+    """Parse sources.txt lines: "Category:Name", optionally "| N" (cap) or "| all" (no cap)."""
+    out = []
     for line in Path(path).read_text().splitlines():
         line = line.split("#", 1)[0].strip()
-        if line:
-            cats.append(line if line.lower().startswith("category:") else f"Category:{line}")
-    return cats
+        if not line:
+            continue
+        name, _, cap = (part.strip() for part in line.partition("|"))
+        if cap.lower() == "all":
+            limit = 0
+        elif cap:
+            limit = int(cap)
+        else:
+            limit = default_limit
+        out.append((name if name.lower().startswith("category:") else f"Category:{name}", limit))
+    return out
 
 
 def century_bucket(date):
@@ -111,13 +121,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sources", default=ROOT / "sources.txt")
     ap.add_argument("--out", default=ROOT / "src/data/commons.json")
-    ap.add_argument("--limit", type=int, default=0, help="max files per category (0 = all)")
+    ap.add_argument("--limit", type=int, default=5000,
+                    help="default max files per category when sources.txt gives no cap (0 = all)")
     args = ap.parse_args()
 
     records, seen = [], set()
-    for cat in read_sources(args.sources):
-        print(f"Fetching {cat}")
-        for r in fetch_category(cat, args.limit):
+    for cat, limit in read_sources(args.sources, args.limit):
+        print(f"Fetching {cat} (cap: {limit or 'none'})")
+        for r in fetch_category(cat, limit):
             if r["id"] not in seen:
                 seen.add(r["id"])
                 records.append(r)
