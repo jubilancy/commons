@@ -1,4 +1,5 @@
 import artworksRaw from "./artworks.json";
+import commonsRaw from "./commons.json";
 
 export interface Artwork {
   id: string;
@@ -20,9 +21,13 @@ export interface Artwork {
   alt_text: string;
   wikidata: string;
   source_url: string;
+  // Wikimedia Commons records only
+  source?: "commons";
+  full_url?: string;
+  license?: string;
 }
 
-export const artworks: Artwork[] = artworksRaw as Artwork[];
+export const artworks: Artwork[] = [...(artworksRaw as Artwork[]), ...(commonsRaw as Artwork[])];
 
 export function getArtworkById(id: string): Artwork | undefined {
   return artworks.find((a) => a.id === id);
@@ -74,4 +79,13 @@ export function getClassificationFacets(): FacetEntry[] {
 // IIIF helper: request a specific square/box size instead of the baked-in 200x200 thumb
 export function iiifSized(iiifUrl: string, size: number = 400): string {
   return `${iiifUrl}/full/!${size},${size}/0/default.jpg`;
+}
+
+// Image URL helpers that work for both NGA (IIIF) and Commons records
+export function thumbUrl(a: Artwork): string {
+  return a.source === "commons" ? a.thumb_url : iiifSized(a.iiif_url, 400);
+}
+
+export function fullUrl(a: Artwork): string {
+  return a.source === "commons" ? (a.full_url ?? a.thumb_url) : iiifSized(a.iiif_url, 1200);
 }

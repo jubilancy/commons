@@ -1,5 +1,5 @@
 ---
-import { iiifSized, type Artwork } from "../data/gallery";
+import { thumbUrl, type Artwork } from "../data/gallery";
 interface Props {
   artwork: Artwork;
 }
@@ -8,7 +8,7 @@ const { artwork } = Astro.props as Props;
 <a class="card" href={`/artwork/${artwork.id}/`}>
   <div class="thumb-wrap">
     <img
-      src={iiifSized(artwork.iiif_url, 400)}
+      src={thumbUrl(artwork)}
       alt={artwork.alt_text || artwork.title}
       loading="lazy"
     />
